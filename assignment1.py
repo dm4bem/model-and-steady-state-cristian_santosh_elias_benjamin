@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 import dm4bem
 
 
-L = 4               # m length of the walls room
-height = 3               # m height of the walls room
+L = 4                 # m length of the walls room
+height = 3            # m height of the walls room
 
-Sg = L*height              # m² surface area of the glass wall
+Sg = L*height         # m² surface area of the glass wall
 Sc2 = Si2 = 4 * Sg    # m² surface area of concrete & insulation of the 4 walls of room 2
 Sc1 = Si1 = 5 * Sg    # m² surface area of concrete & insulation of the 5 walls of room 1
 
@@ -18,11 +18,11 @@ air = {'Density': 1.2,                      # kg/m³
 pd.DataFrame(air, index=['Air'])
 
 # wall properties
-concrete_middlewall = {'Conductivity': 1.400,          # W/(m·K)
-            'Density': 2300.0,              # kg/m³
-            'Specific heat': 880,           # J/(kg⋅K)
-            'Width': 0.2,                   # m
-            'Surface': Sg}                 # m²
+concrete_middlewall = {'Conductivity': 1.400, # W/(m·K)
+            'Density': 2300.0,                # kg/m³
+            'Specific heat': 880,             # J/(kg⋅K)
+            'Width': 0.2,                     # m
+            'Surface': Sg}                    # m²
 
 concrete_room1 = {'Conductivity': 1.400,          # W/(m·K)
             'Density': 2300.0,              # kg/m³
@@ -30,19 +30,19 @@ concrete_room1 = {'Conductivity': 1.400,          # W/(m·K)
             'Width': 0.2,                   # m
             'Surface': Sc1}                 # m²
 
-insulation_room1 = {'Conductivity': 0.027,        # W/(m·K)
+insulation_room1 = {'Conductivity': 0.027,  # W/(m·K)
               'Density': 55.0,              # kg/m³
               'Specific heat': 1210,        # J/(kg⋅K)
               'Width': 0.08,                # m
               'Surface': Si1}               # m²
 
-concrete_room2 = {'Conductivity': 1.400,          # W/(m·K)
+concrete_room2 = {'Conductivity': 1.400,    # W/(m·K)
             'Density': 2300.0,              # kg/m³
             'Specific heat': 880,           # J/(kg⋅K)
             'Width': 0.2,                   # m
             'Surface': Sc2}                 # m²
 
-insulation_room2 = {'Conductivity': 0.027,        # W/(m·K)
+insulation_room2 = {'Conductivity': 0.027,  # W/(m·K)
               'Density': 55.0,              # kg/m³
               'Specific heat': 1210,        # J/(kg⋅K)
               'Width': 0.08,                # m
@@ -61,7 +61,6 @@ wall = pd.DataFrame.from_dict({'Layer_out_1': concrete_room1,
                                'Layer_middle': concrete_middlewall,
                                'Glass': glass},
                               orient='index')
-# print(wall)
 
 # radiative properties
 ε_wLW = 0.85    # long wave emmisivity: wall surface (concrete and insulation)
@@ -78,10 +77,10 @@ G_cd = wall['Conductivity'] / wall['Width'] * wall['Surface']
 pd.DataFrame(G_cd, columns=['Conductance'])
 
 # convection
-Gconv_1 = h * wall['Surface'].iloc[0]     # wall
-Gconv_2= h * wall['Surface'].iloc[2]     # glass
+Gconv_1 = h * wall['Surface'].iloc[0]       # wall
+Gconv_2= h * wall['Surface'].iloc[2]        # glass
 Gconv_middle = h * wall['Surface'].iloc[4]  # middle wall
-Gconv_glass = h * wall['Surface'].iloc[5]  # glass
+Gconv_glass = h * wall['Surface'].iloc[5]   # glass
 
 # view factor concretewall-glass
 Fcwg = glass['Surface'] / concrete_room2['Surface']
@@ -136,7 +135,7 @@ Kp = 0
 C = wall['Density'] * wall['Specific heat'] * wall['Surface'] * wall['Width']
 pd.DataFrame(C, columns=['Capacity'])
 
-# Create a zero matrix with 22 rows and 17 columns (updated to match the highest column index used: 16)
+# Create a zero matrix with 22 rows and 16 columns (updated to match the highest column index used: 16)
 A = np.zeros([22, 16])
 
 A[0,0] = 1
@@ -211,7 +210,7 @@ f = pd.Series(['Φo1', 0, 0, 0, 0, 0, 0, 0,'Φi1', 0, 0, 'Φi2', 0, 0, 0, 'Φo2'
               index=θ)
 
 y = np.zeros(16)            # nodes
-y[[5, 10]] = 1              # nodes (temperatures) of interest
+y[[5, 10]] = 1              # nodes (temperatures) of interest 
 
 pd.DataFrame(y, index=θ)
 
@@ -230,24 +229,24 @@ TC = {"A": A,
       "f": f,
       "y": y}
 
-print('A')
-print(TC['A'])
-print('G')
-print(TC['G'])
-print('C')
-print(TC['C'])
-print('b')
-print(TC['b'])
-print('f')
-print(TC['f'])
+# print('A')
+# print(TC['A'])
+# print('G')
+# print(TC['G'])
+# print('C')
+# print(TC['C'])
+# print('b')
+# print(TC['b'])
+# print('f')
+# print(TC['f'])
 
 
-# Steady state
+# Steady state with no flow-rate sources
 bss = np.zeros(22)        # temperature sources b for steady state
-bss[[0, 12, 16]] = 10     # outdoor temperature
-bss[[6, 14]] = 20         # indoor temperature
+bss[[0, 12, 16]] = 10     # outdoor temperature To : 10 °C
+bss[[6, 14]] = 20         # indoor temperature Ti1, Ti2 : 20 °C
 
-fss = np.zeros(16)         # flow-rate sources f for steady state
+fss = np.zeros(16)        # flow-rate sources f for steady state
 
 A = TC['A']
 G = TC['G']
@@ -258,3 +257,20 @@ print(f'θss = {np.around(θss, 2)} °C')
 
 # State-space
 [As, Bs, Cs, Ds, us] = dm4bem.tc2ss(TC)
+
+bT = np.array([10, 20, 10, 20, 10])     # [To, Ti1, To, Ti2, To]
+fQ = np.array([0, 0, 0, 0])             # [Φo1, Φi1, Φi2, Φo2]
+uss = np.hstack([bT, fQ])               # input vector for state space
+print(f'uss = {uss}')
+
+
+inv_As = pd.DataFrame(np.linalg.inv(As),
+                      columns=As.index, index=As.index)
+yss = (-Cs @ inv_As @ Bs + Ds) @ uss                        # output vector for state space are the temperatures θ5 and θ10
+yss = [float(yss.values[0]), float(yss.values[1])]
+
+print(f'yss_θ5 = {np.around(yss[0], 2)} °C')
+print(f'yss_θ10 = {np.around(yss[1], 2)} °C')
+
+# Compare: the error between the steady-state values obtained from the system of DAE and the output of the state-space representation yss
+print(f'Errors between DAE and state-space: {abs(θss[5] - yss[0]):.2e} °C and {abs(θss[10] - yss[1]):.2e} °C')
