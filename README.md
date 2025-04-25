@@ -6,3 +6,7 @@ To discuss next time:
 -jupyter notebook 
 -adding Qa of random people etc that are heating the room
 -adding advection
+
+
+
+Questions: why does the temperature not start at 0 for the second room?
