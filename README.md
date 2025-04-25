@@ -6,6 +6,8 @@ To discuss next time:
 -jupyter notebook 
 -adding Qa of random people etc that are heating the room
 -adding advection
+-other controllers?
+-walls in csv?? 
 
 
 
