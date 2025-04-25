@@ -3,8 +3,11 @@
 
 
 To do next time:
+
 make jupyter notebook 
+
 -other controllers? (non - linear)
+
 -walls in csv?? (assembling)
 
 -adding Qa of random people etc that are heating the room
