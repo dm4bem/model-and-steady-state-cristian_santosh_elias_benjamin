@@ -10,8 +10,7 @@ make jupyter notebook
 
 -walls in csv?? (assembling)
 
--adding Qa of random people etc that are heating the room
--adding advection
+-adding Qa of random people etc that are heating the room // adding advection
 
 
 
