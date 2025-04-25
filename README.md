@@ -14,6 +14,8 @@ make jupyter notebook
 
 
 
-Questions: why does the temperature not start at 0 for the second room?
+Question: why does the temperature not start at 0 for the second room?
 
-Questions: why is everything so slow, right now I just imposed a half an hour time step but otherwise the resampling is slower than an hour. 
+Question: why is everything so slow, right now I just imposed a half an hour time step but otherwise the resampling is slower than an hour. 
+
+Question: Why do you use the total area for the phi (radiance) because the floor is not radiated?
