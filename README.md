@@ -10,3 +10,5 @@ To discuss next time:
 
 
 Questions: why does the temperature not start at 0 for the second room?
+
+Questions: why is everything so slow, right now I just imposed a half an hour time step but otherwise the resampling is slower than an hour. 
