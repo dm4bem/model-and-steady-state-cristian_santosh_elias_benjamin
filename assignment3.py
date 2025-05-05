@@ -1,0 +1,127 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+import dm4bem
+
+controller = True
+neglect_air_glass_capacity = True # Always true in this model
+imposed_time_step = False
+Δt = 1800    # s, imposed time step
+
+# MODEL
+# =====
+# Thermal circuit
+TC = dm4bem.file2TC('./MODEL/TC.csv', name='', auto_number=False)
+
+# by default TC['G']['q6'] = 0 and TC['G']['q14'] = 0, i.e. Kp -> 0, no controller (free-floating)
+
+if controller:
+    TC['G']['q6'] = 1e3        # Kp -> ∞, almost perfect controller
+    TC['G']['q14'] = 1e3 
+
+# State-space
+[As, Bs, Cs, Ds, us] = dm4bem.tc2ss(TC)
+
+# Eigenvalues analysis
+λ = np.linalg.eig(As)[0]        # eigenvalues of matrix As
+# print(f'λ = {λ}')
+
+# time step
+Δtmax = 2 * min(-1 / λ)    # max time step for stability of Euler explicit
+dm4bem.print_rounded_time('Δtmax', Δtmax)
+
+imposed_time_step = True
+
+if imposed_time_step:
+    dt = Δt
+else:
+    dt = dm4bem.round_time(Δtmax)
+
+if dt < 10:
+    raise ValueError("Time step is too small. Stopping the script.")
+
+dm4bem.print_rounded_time('dt', dt)
+
+# settling time
+t_settle = 4 * max(-1 / λ)
+dm4bem.print_rounded_time('t_settle', t_settle)
+
+# duration: next multiple of 3600 s that is larger than t_settle
+duration = np.ceil(t_settle / 3600) * 3600
+dm4bem.print_rounded_time('duration', duration)
+
+# Define the start and end dates for the simulation
+start_date = '05-01 12:00:00'
+end_date = '05-07 12:00:00'
+
+start_date = '2025-' + start_date
+end_date = '2025-' + end_date
+print(f'{start_date} \tstart date')
+print(f'{end_date} \tend date')
+
+# Grenoble Alpes Isère Airport (LFLS) weather data
+filename = './weather_data/FRA_AR_Grenoble_Airport.epw'
+[data, meta] = dm4bem.read_epw(filename, coerce_year=None)
+weather = data[["temp_air", "dir_n_rad", "dif_h_rad"]]
+del data
+weather.index = weather.index.map(lambda t: t.replace(year=2025))
+weather = weather.loc[start_date:end_date]
+
+# Temperature sources
+To = weather['temp_air']
+
+# Solar radiation absorbed by the glass in neglected, see assignment1 
+# Solar radiation Φo1, Φi1, Φi2, Φo2 to be computed from weather data and parameters from assignment1
+
+
+# radiative properties (see assignment1)
+α_wSW = 0.25    # short wave absortivity: white smooth surface
+α_gSW = 0.38    # short wave absortivity: reflective blue glass
+τ_gSW = 0.30    # short wave transmitance: reflective blue glass
+
+# total solar irradiance
+# to be correct in the calculations we make a difference between the walls of the two rooms, however they have the same angle properties
+wall_out = pd.read_csv('./BLDG/walls_out.csv')
+w1 = wall_out[wall_out['ID'] == 'w0']  #concrete walls of room 1
+w2 = wall_out[wall_out['ID'] == 'w1']  #concrete walls of room 2
+wall_in = pd.read_csv('./BLDG/walls_in.csv')
+w3 = wall_out[wall_out['ID'] == 'w0']  #concrete walls of middle room
+
+surface_orientation = {'slope': w1['β'].values[0],
+                       'azimuth': w1['γ'].values[0],
+                       'latitude': 45}
+
+rad_surf = dm4bem.sol_rad_tilt_surf(
+    weather, surface_orientation, w1['albedo'].values[0])
+
+Etot = rad_surf.sum(axis=1)
+
+# solar radiation absorbed by the outdoor surface of the wall
+Φo1 = w1['α1'].values[0] * w1['Area'].values[0] * Etot  # can we use the area over here????? because bothom is not relevant NONO
+Φo2 = w2['α1'].values[0] * w2['Area'].values[0] * Etot  # alpha1 is outdoor absorptivity
+
+
+# solar radiation absorbed by the indoor surface of the wall
+S_glass = 12 # m² surface area of the glass wall, see assignment1
+Φi1 = τ_gSW * w2['α0'].values[0] * S_glass * Etot    # Etot_w2 because glass angle properties are the same as w2, alpha0 is indoor absorp
+Φi2 = τ_gSW * w3['α0'].values[0] * S_glass * Etot    # Etot_w2 because glass angle properties are the same as w2
+
+
+# Indoor air temperature set-point
+Ti_day, Ti_night = 20, 16
+
+Ti1 = pd.Series(
+    [Ti_day if 6 <= hour <= 22 else Ti_night for hour in To.index.hour],
+    index=To.index)
+Ti2 = pd.Series(
+    [Ti_day if 6 <= hour <= 22 else Ti_night for hour in To.index.hour],
+    index=To.index)
+
+# No auxiliary heat sources in this model
+
+# Input data set
+input_data_set = pd.DataFrame({'To': To, 'Ti1': Ti1, 'Ti2': Ti2,
+                               'Φo1': Φo1, 'Φi1': Φi1, 'Φi2': Φi2, 'Φo2': Φo2, 'Etot': Etot})
+
+input_data_set.to_csv('./MODEL/input_data_set.csv')
