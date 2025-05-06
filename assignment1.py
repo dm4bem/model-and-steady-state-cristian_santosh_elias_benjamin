@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import csv
 
 import dm4bem
 
@@ -11,6 +12,8 @@ height = 3            # m height of the walls room
 Sg = L*height         # m² surface area of the glass wall
 Sc2 = Si2 = 4 * Sg    # m² surface area of concrete & insulation of the 4 walls of room 2
 Sc1 = Si1 = 5 * Sg    # m² surface area of concrete & insulation of the 5 walls of room 1
+
+
 
 # room properties
 air = {'Density': 1.2,                      # kg/m³
@@ -81,6 +84,7 @@ Gconv_1 = h * wall['Surface'].iloc[0]       # wall
 Gconv_2= h * wall['Surface'].iloc[2]        # glass
 Gconv_middle = h * wall['Surface'].iloc[4]  # middle wall
 Gconv_glass = h * wall['Surface'].iloc[5]   # glass
+
 
 # view factor concretewall-glass
 Fcwg = glass['Surface'] / concrete_room2['Surface']
@@ -161,6 +165,7 @@ A[19,12],A[19,13] = 1,-1
 A[20,11],A[20,12] = 1,-1
 A[21,10],A[21,11] = 1,-1
 
+print(A)
 # Create DataFrame
 df = pd.DataFrame(A, index=q, columns=θ)
 
@@ -189,6 +194,11 @@ G = np.array(np.hstack(
      2*G_cd['Layer_in_2'],
      Gconv_2['in'],    
      ]))
+
+print("10 g")
+print(GLW)
+print("15 g")
+print(GLW_c)
 
 # np.set_printoptions(precision=3, threshold=16, suppress=True)
 # pd.set_option("display.precision", 1)
@@ -228,6 +238,7 @@ TC = {"A": A,
       "b": b,
       "f": f,
       "y": y}
+# print(TC)
 
 # print('A')
 # print(TC['A'])
@@ -253,7 +264,7 @@ G = TC['G']
 diag_G = pd.DataFrame(np.diag(G), index=G.index, columns=G.index)
 
 θss = np.linalg.inv(A.T @ diag_G @ A) @ (A.T @ diag_G @ bss + fss)
-print(f'θss = {np.around(θss, 2)} °C')
+# print(f'θss = {np.around(θss, 2)} °C')
 
 # State-space
 [As, Bs, Cs, Ds, us] = dm4bem.tc2ss(TC)
@@ -261,7 +272,7 @@ print(f'θss = {np.around(θss, 2)} °C')
 bT = np.array([10, 20, 10, 20, 10])     # [To, Ti1, To, Ti2, To]
 fQ = np.array([0, 0, 0, 0])             # [Φo1, Φi1, Φi2, Φo2]
 uss = np.hstack([bT, fQ])               # input vector for state space
-print(f'uss = {uss}')
+# print(f'uss = {uss}')
 
 
 inv_As = pd.DataFrame(np.linalg.inv(As),
@@ -274,3 +285,7 @@ print(f'yss_θ10 = {np.around(yss[1], 2)} °C')
 
 # Compare: the error between the steady-state values obtained from the system of DAE and the output of the state-space representation yss
 print(f'Errors between DAE and state-space: {abs(θss[5] - yss[0]):.2e} °C and {abs(θss[10] - yss[1]):.2e} °C')
+
+# Writing TC to a CSV file
+
+dm4bem.TC2file(TC, './MODEL/TC.csv')
