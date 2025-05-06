@@ -31,8 +31,6 @@ if controller:
 Δtmax = 2 * min(-1 / λ)    # max time step for stability of Euler explicit
 dm4bem.print_rounded_time('Δtmax', Δtmax)
 
-imposed_time_step = True
-
 if imposed_time_step:
     dt = Δt
 else:
@@ -88,6 +86,7 @@ for k in range(u.shape[0] - 1):
     θ_imp.iloc[k + 1] = np.linalg.inv(I - dt * As) @ (θ_imp.iloc[k] + dt * Bs @ u.iloc[k])
 
 # output for rooms
+
 y_exp = (Cs @ θ_exp.T + Ds @  u.T).T
 y_imp = (Cs @ θ_imp.T + Ds @  u.T).T
 
