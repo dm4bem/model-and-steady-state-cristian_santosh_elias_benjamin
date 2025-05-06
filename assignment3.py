@@ -76,18 +76,13 @@ To = weather['temp_air']
 
 
 # radiative properties (see assignment1)
-α_wSW = 0.25    # short wave absortivity: white smooth surface
-α_gSW = 0.38    # short wave absortivity: reflective blue glass
-τ_gSW = 0.30    # short wave transmitance: reflective blue glass
+τ_gSW = 0.30  # short wave transmitance: reflective blue glass
 
-# total solar irradiance
-# to be correct in the calculations we make a difference between the walls of the two rooms, however they have the same angle properties
 wall_out = pd.read_csv('./BLDG/walls_out.csv')
-w1 = wall_out[wall_out['ID'] == 'w0']  #concrete walls of room 1
-w2 = wall_out[wall_out['ID'] == 'w1']  #concrete walls of room 2
+w1 = wall_out[wall_out['ID'] == 'w0'] #concrete
+w2 = wall_out[wall_out['ID'] == 'w1'] #insulation
 wall_in = pd.read_csv('./BLDG/walls_in.csv')
-w3 = wall_out[wall_out['ID'] == 'w0']  #concrete walls of middle room
-
+w3 = wall_in[wall_in['ID'] == 'w0'] #concrete
 surface_orientation = {'slope': w1['β'].values[0],
                        'azimuth': w1['γ'].values[0],
                        'latitude': 45}
@@ -98,14 +93,14 @@ rad_surf = dm4bem.sol_rad_tilt_surf(
 Etot = rad_surf.sum(axis=1)
 
 # solar radiation absorbed by the outdoor surface of the wall
-Φo1 = w1['α1'].values[0] * w1['Area'].values[0] * Etot  # can we use the area over here????? because bothom is not relevant NONO
-Φo2 = w2['α1'].values[0] * w2['Area'].values[0] * Etot  # alpha1 is outdoor absorptivity
+Φo1 = w1['α1'].values[0] * w1['Area'].values[0] * Etot  
+Φo2 = w2['α1'].values[0] * w2['Area'].values[0] * Etot 
 
 
 # solar radiation absorbed by the indoor surface of the wall
 S_glass = 12 # m² surface area of the glass wall, see assignment1
-Φi1 = τ_gSW * w2['α0'].values[0] * S_glass * Etot    # Etot_w2 because glass angle properties are the same as w2, alpha0 is indoor absorp
-Φi2 = τ_gSW * w3['α0'].values[0] * S_glass * Etot    # Etot_w2 because glass angle properties are the same as w2
+Φi1 = τ_gSW * w2['α0'].values[0] * S_glass * Etot    
+Φi2 = τ_gSW * w3['α0'].values[0] * S_glass * Etot    
 
 
 # Indoor air temperature set-point
