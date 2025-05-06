@@ -61,8 +61,8 @@ time = pd.date_range(start="2025-01-01 00:00:00",
 To = 10 * np.ones(n)         # outdoor temperature 10 °C
 Ti1 = 20 * np.ones(n)        # indoor temperature set point 20 °C
 Ti2 = 20 * np.ones(n)        # indoor temperature set point 20 °C
-Φi1 = 0 * np.ones(n)         # solar radiation absorbed by the glass
-Φo2 = Φo1 = Φi2 = Φi1        # auxiliary heat sources and solar radiation
+Φi1 = 0 * np.ones(n)         # solar radiation 
+Φo2 = Φo1 = Φi2 = Φi1        # solar radiation
 
 
 data = {'To': To, 'Ti1': Ti1, 'To': To, 'Ti2': Ti2, 'To': To, 'Φo1': Φo1, 'Φi1': Φi1, 'Φi2': Φi2, 'Φo2': Φo2}
